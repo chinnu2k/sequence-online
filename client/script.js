@@ -22,31 +22,40 @@ socket.on("sequence", color=>{
 
 
 socket.on("sync", state => {
+  game = state;                     // FIRST assign game
+
   document.getElementById("redScore").innerText = game.scores.red;
   document.getElementById("blueScore").innerText = game.scores.blue;
 
-  game = state;
   draw();
 });
 
+
 function draw(){
+  if(!game) return;   // ⬅️ THIS IS THE FIX
   drawBoard();
   drawHands();
 }
 
+
 function drawBoard(){
+  if(!game || !game.board) return;
+
   boardEl.innerHTML="";
   game.board.forEach((c,i)=>{
     const d=document.createElement("div");
     d.className="cell";
     if(c.chip) d.classList.add(c.chip);
-    d.innerText=c.card;
-    d.onclick=()=>playMove(i);
+    d.innerText = c.card || "";
+    d.onclick = ()=>playMove(i);
     boardEl.appendChild(d);
   });
 }
 
+
 function drawHands(){
+  if(!game || !game.hands) return;
+
   redHandEl.innerHTML="🔴 "+game.hands.red.map(c=>
     `<span class="card ${myColor==='red' && game.current==='red'?'':'disabled'}"
       onclick="${myColor==='red' && game.current==='red'?`selectCard('${c}')`:''}">${c}</span>`
@@ -56,7 +65,11 @@ function drawHands(){
     `<span class="card ${myColor==='blue' && game.current==='blue'?'':'disabled'}"
       onclick="${myColor==='blue' && game.current==='blue'?`selectCard('${c}')`:''}">${c}</span>`
   ).join("");
+
+  document.getElementById("redScore").innerText = game.scores.red;
+  document.getElementById("blueScore").innerText = game.scores.blue;
 }
+
 
 function selectCard(c){ selectedCard = c; }
 

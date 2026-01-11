@@ -6,6 +6,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors:{origin:"*"} });
 
+app.get("/", (req, res) => {
+  res.send("Sequence Socket Server is running 🚀");
+});
 let rooms = {};
 
 io.on("connection", socket => {

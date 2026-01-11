@@ -92,12 +92,18 @@ function playMove(i){
     }
   }
 
-  socket.emit("gameState",{room,state:{board,hands,current,scores}});
+  selectedCard = null;
+  current = current === "red" ? "blue" : "red";
+  turnText.innerText = current + "'s turn";
 
-  selectedCard=null;
-  current=current==="red"?"blue":"red";
-  turnText.innerText=current+"'s turn";
-  drawBoard(); drawHands();
+  socket.emit("gameState", { 
+    room,
+    state: { board, hands, current, scores }
+  });
+
+  drawBoard();
+  drawHands();
+
 }
 
 function checkSequence(color){

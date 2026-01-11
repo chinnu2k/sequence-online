@@ -15,9 +15,22 @@ io.on("connection", socket => {
 
   socket.on("join", room => {
     socket.join(room);
-    if(!rooms[room]) rooms[room]={players:[],state:null};
-    rooms[room].players.push(socket.id);
-    io.to(room).emit("players", rooms[room].players.length);
+
+    if(!rooms[room]){
+      rooms[room] = { players: [], state: null };
+    }
+
+    if(rooms[room].players.length < 2){
+      rooms[room].players.push(socket.id);
+    }
+
+    const role = rooms[room].players[0] === socket.id ? "red" : "blue";
+
+    socket.emit("role", role);
+
+    if(rooms[room].state){
+      socket.emit("sync", rooms[room].state);
+    }
   });
 
   socket.on("gameState", ({room,state})=>{
@@ -25,6 +38,18 @@ io.on("connection", socket => {
     socket.to(room).emit("sync", state);
   });
 
+  socket.on("disconnect", () => {
+  for(const room in rooms){
+    rooms[room].players = rooms[room].players.filter(id => id !== socket.id);
+
+    if(rooms[room].players.length === 0){
+      delete rooms[room];
+    }
+  }
 });
+
+
+});
+
 
 server.listen(process.env.PORT || 3000);

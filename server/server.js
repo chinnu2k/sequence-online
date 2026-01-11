@@ -13,11 +13,25 @@ let rooms = {};
 const suits = ["♠","♣","♥","♦"];
 const ranks = ["A","2","3","4","5","6","7","8","9","10","Q","K"];
 
+function buildBoardCards(){
+  let cards=[];
+  for(let d=0; d<2; d++){
+    suits.forEach(s=>{
+      ranks.forEach(r=>{
+        cards.push(r+s);
+      });
+    });
+  }
+  return cards.sort(()=>Math.random()-0.5);   // exactly 100 cards
+}
+
 function buildDeck(){
   let deck=[];
-  for(let d=0;d<2;d++){
+  for(let d=0; d<2; d++){
     suits.forEach(s=>{
-      ranks.forEach(r=>deck.push(r+s));
+      ranks.forEach(r=>{
+        deck.push(r+s);
+      });
     });
   }
 
@@ -26,15 +40,10 @@ function buildDeck(){
 }
 
 function newGame(){
+  const boardCards = buildBoardCards();     // 100 fixed cards
   const deck = buildDeck();
-  const normalCards = [];
-suits.forEach(s => ranks.forEach(r => normalCards.push(r+s)));
 
-const board = Array.from({length:100},()=>({
-  card: normalCards[Math.floor(Math.random()*normalCards.length)],
-  chip:null
-}));
-
+  const board = boardCards.map(c=>({ card:c, chip:null }));
 
   return {
     board,
@@ -88,9 +97,18 @@ io.on("connection", socket => {
 
     const cell=g.board[index];
 
-    if(card==="JE"){ if(cell.chip&&cell.chip!==color) cell.chip=null; else return; }
-    else if(card==="JEE"){ if(!cell.chip) cell.chip=color; else return; }
-    else{ if(cell.card!==card||cell.chip) return; cell.chip=color; }
+    if(card==="JE"){
+      if(cell.chip && cell.chip!==color) cell.chip=null;
+      else return;
+    }
+    else if(card==="JEE"){
+      if(!cell.chip) cell.chip=color;
+      else return;
+    }
+    else{
+      if(cell.card!==card || cell.chip) return;
+      cell.chip=color;
+    }
 
     g.hands[color].splice(g.hands[color].indexOf(card),1);
     g.hands[color].push(g.deck.pop());

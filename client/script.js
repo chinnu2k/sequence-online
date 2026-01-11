@@ -1,4 +1,4 @@
-const socket = io("https://sequence-online.onrender.com");
+const socket = io("https://sequence-backend-cnv1.onrender.com/");
 const room = prompt("Room Code");
 socket.emit("join", room);
 

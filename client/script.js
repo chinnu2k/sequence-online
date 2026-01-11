@@ -46,7 +46,18 @@ function drawBoard(){
     const d=document.createElement("div");
     d.className="cell";
     if(c.chip) d.classList.add(c.chip);
-    d.innerText = c.card || "";
+    if(c.card){
+    const suit = c.card.slice(-1);
+    const rank = c.card.slice(0,-1);
+
+    let cls = "spadeCard";
+    if(suit==="♣") cls="clubCard";
+    if(suit==="♥") cls="heartCard";
+    if(suit==="♦") cls="diamondCard";
+
+    d.innerHTML = `<span class="${cls}">${rank}${suit}</span>`;
+  }
+
     d.onclick = ()=>playMove(i);
     boardEl.appendChild(d);
   });

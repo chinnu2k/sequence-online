@@ -27,10 +27,14 @@ function buildDeck(){
 
 function newGame(){
   const deck = buildDeck();
-  const board = Array.from({length:100},()=>({
-    card: deck.pop(),
-    chip:null
-  }));
+  const normalCards = [];
+suits.forEach(s => ranks.forEach(r => normalCards.push(r+s)));
+
+const board = Array.from({length:100},()=>({
+  card: normalCards[Math.floor(Math.random()*normalCards.length)],
+  chip:null
+}));
+
 
   return {
     board,

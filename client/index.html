@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SEQUENCE Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>SEQUENCE – Multiplayer</h1>
+<h2 id="turn">Connecting...</h2>
+
+<div id="scoreboard">
+  🔴 <span id="redScore">0</span> | 🔵 <span id="blueScore">0</span>
+</div>
+
+<div id="hands">
+  <div id="redHand"></div>
+  <div id="blueHand"></div>
+</div>
+
+<div id="board"></div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

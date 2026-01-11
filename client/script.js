@@ -16,7 +16,15 @@ socket.on("role", r => {
   turnText.innerText = "You are " + r.toUpperCase();
 });
 
+socket.on("sequence", color=>{
+  alert(color.toUpperCase()+" formed a SEQUENCE!");
+});
+
+
 socket.on("sync", state => {
+  document.getElementById("redScore").innerText = game.scores.red;
+  document.getElementById("blueScore").innerText = game.scores.blue;
+
   game = state;
   draw();
 });

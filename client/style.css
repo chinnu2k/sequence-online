@@ -46,7 +46,12 @@ body {
     opacity: .3;
     pointer-events: none;
 }
-.spadeCard { color:#000; font-weight:700; }
+.spadeCard { 
+  color:#e0e0e0; 
+  font-weight:700;
+  text-shadow:0 0 2px #000;
+}
+
 .clubCard { color:#3ddc84; font-weight:700; }     /* green */
 .heartCard { color:#ff4d4d; font-weight:700; }    /* red */
 .diamondCard { color:#4fc3f7; font-weight:700; }  /* glass blue */

@@ -96,10 +96,8 @@ function playMove(i){
   current = current === "red" ? "blue" : "red";
   turnText.innerText = current + "'s turn";
 
-  socket.emit("gameState", { 
-    room,
-    state: { board, hands, current, scores }
-  });
+  socket.emit("move",{ room, index:i, card:selectedCard, color:myColor });
+
 
   drawBoard();
   drawHands();

@@ -56,19 +56,30 @@ function newGame(){
 }
 
 function checkSequence(g,color){
-  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
-  for(let i=0;i<100;i++){
-    if(g.board[i].chip!==color || g.sequenceCells.includes(i)) continue;
-    const r=i/10|0,c=i%10;
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
 
-    for(const[dX,dY] of dirs){
+  for(let i=0;i<g.board.length;i++){
+    if(!g.board[i] || g.board[i].chip!==color || g.sequenceCells.includes(i)) continue;
+
+    const r = Math.floor(i/10);
+    const c = i%10;
+
+    for(const [dx,dy] of dirs){
       let cells=[i];
+
       for(let k=1;k<5;k++){
-        let idx=(r+dX*k)*10+(c+dY*k);
-        if(g.board[idx]?.chip===color && !g.sequenceCells.includes(idx))
-          cells.push(idx);
-        else break;
+        const nr = r + dx*k;
+        const nc = c + dy*k;
+
+        if(nr<0 || nr>9 || nc<0 || nc>9) break;
+
+        const idx = nr*10 + nc;
+        if(!g.board[idx] || g.board[idx].chip!==color || g.sequenceCells.includes(idx))
+          break;
+
+        cells.push(idx);
       }
+
       if(cells.length===5){
         g.sequenceCells.push(...cells);
         g.scores[color]++;
@@ -78,6 +89,7 @@ function checkSequence(g,color){
   }
   return false;
 }
+
 
 io.on("connection", socket => {
 

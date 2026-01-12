@@ -1,5 +1,5 @@
 body {
-  background: #0b132b;
+  background: radial-gradient(circle at top, #1a2140, #050812);
   color: white;
   text-align: center;
   font-family: system-ui, sans-serif;
@@ -15,15 +15,23 @@ body {
 .cell {
   width: 60px;
   height: 60px;
-  background: #1c2541;
-  border-radius: 6px;
+  background: linear-gradient(145deg, #232c52, #141a33);
+  border-radius: 10px;
   cursor: pointer;
   font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  font-family: "Segoe UI Symbol","Apple Symbols","Noto Sans Symbols","Arial Unicode MS",system-ui,sans-serif;
+  box-shadow: inset 2px 2px 6px rgba(255,255,255,0.04),
+              inset -2px -2px 6px rgba(0,0,0,0.5),
+              0 2px 4px rgba(0,0,0,0.6);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.cell:hover{
+  transform: scale(1.03);
+  box-shadow: 0 0 8px rgba(255,255,255,0.12);
 }
 
 /* Chip overlay */

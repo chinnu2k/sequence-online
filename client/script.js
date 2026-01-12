@@ -66,22 +66,45 @@ function drawBoard(){
 }
 
 
-function renderCard(c,active){
-  return `<span class="card ${active?'':'disabled'}"
-    onclick="${active?`selectCard('${c}')`:''}">${c}</span>`;
+function renderCard(c, active){
+  const span = document.createElement("span");
+  span.className = "card" + (active ? "" : " disabled");
+  span.innerText = c;
+
+  if(active){
+    span.addEventListener("click", () => {
+      selectedCard = c;
+      document.querySelectorAll(".card").forEach(e => e.classList.remove("selected"));
+      span.classList.add("selected");
+    });
+  }
+  return span;
 }
+
 
 function drawHands(){
-  const q=document.getElementById("cardSearch").value||"";
+  const q = document.getElementById("cardSearch").value || "";
 
-  redHandEl.innerHTML=myColor==="red"
-    ? "🔴 "+game.hands.red.filter(c=>c.includes(q)).map(c=>renderCard(c,game.current==="red")).join("")
-    : "🔴 <span class='hiddenHand'>Opponent Hand</span>";
+  redHandEl.innerHTML = "🔴 ";
+  blueHandEl.innerHTML = "🔵 ";
 
-  blueHandEl.innerHTML=myColor==="blue"
-    ? "🔵 "+game.hands.blue.filter(c=>c.includes(q)).map(c=>renderCard(c,game.current==="blue")).join("")
-    : "🔵 <span class='hiddenHand'>Opponent Hand</span>";
+  if(myColor === "red"){
+    game.hands.red.filter(c => c.includes(q)).forEach(c=>{
+      redHandEl.appendChild(renderCard(c, game.current==="red"));
+    });
+  } else {
+    redHandEl.innerHTML += "<span class='hiddenHand'>Opponent Hand</span>";
+  }
+
+  if(myColor === "blue"){
+    game.hands.blue.filter(c => c.includes(q)).forEach(c=>{
+      blueHandEl.appendChild(renderCard(c, game.current==="blue"));
+    });
+  } else {
+    blueHandEl.innerHTML += "<span class='hiddenHand'>Opponent Hand</span>";
+  }
 }
+
 
 function selectCard(c){ selectedCard=c; }
 

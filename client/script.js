@@ -39,7 +39,9 @@ function draw(){
 }
 
 function drawBoard(){
+  const q = document.getElementById("cardSearch").value || "";
   boardEl.innerHTML="";
+
   game.board.forEach((c,i)=>{
     const d=document.createElement("div");
     d.className="cell";
@@ -53,10 +55,16 @@ function drawBoard(){
     if(suit==="♦") cls="diamondCard";
 
     d.innerHTML=`<span class="rank">${rank}</span><span class="${cls}">${suit}</span>`;
+
+    if(q && c.card.toLowerCase().includes(q.toLowerCase())){
+      d.classList.add("highlight");
+    }
+
     d.onclick=()=>playMove(i);
     boardEl.appendChild(d);
   });
 }
+
 
 function renderCard(c,active){
   return `<span class="card ${active?'':'disabled'}"

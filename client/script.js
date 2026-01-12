@@ -93,4 +93,8 @@ function playMove(i){
   selectedCard=null;
 }
 
-document.getElementById("cardSearch").addEventListener("input", drawHands);
+document.getElementById("cardSearch").addEventListener("input", () => {
+  drawHands();
+  drawBoard();
+});
+

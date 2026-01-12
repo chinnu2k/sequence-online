@@ -32,6 +32,12 @@ socket.on("sync", state => {
   draw();
 });
 
+socket.on("gameover", winner=>{
+  if(winner==="draw") alert("Game Over! It's a DRAW.");
+  else alert(winner.toUpperCase()+" WINS with more SEQUENCES!");
+  location.reload();
+});
+
 function draw(){
   if(!game) return;
   drawBoard();
@@ -47,7 +53,6 @@ function drawBoard(){
     d.className = "cell";
     if(c.chip) d.classList.add(c.chip);
 
-    // 🔥 FREE corner handling
     if(c.card === "FREE"){
       d.innerHTML = "<span class='freeCell'>FREE</span>";
       boardEl.appendChild(d);
@@ -73,8 +78,6 @@ function drawBoard(){
   });
 }
 
-
-
 function renderCard(c, active){
   const span = document.createElement("span");
   span.className = "card" + (active ? "" : " disabled");
@@ -83,16 +86,14 @@ function renderCard(c, active){
   if(active){
     span.addEventListener("click", () => {
       selectedCard = c;
-      document.getElementById("cardSearch").value = c;   // 🔥 auto-fill search
+      document.getElementById("cardSearch").value = c;
       document.querySelectorAll(".card").forEach(e => e.classList.remove("selected"));
       span.classList.add("selected");
-      drawBoard();   // update board highlight
-});
-
+      drawBoard();
+    });
   }
   return span;
 }
-
 
 function drawHands(){
   const q = document.getElementById("cardSearch").value || "";
@@ -117,26 +118,19 @@ function drawHands(){
   }
 }
 
-
-function selectCard(c){ selectedCard=c; }
-
 function playMove(i){
   if(!selectedCard) return alert("Select a card");
   if(game.current!==myColor) return alert("Wait for your turn!");
 
   socket.emit("move",{ room, index:i, card:selectedCard, color:myColor });
 
-  // 🔥 clear search after using it
   document.getElementById("cardSearch").value = "";
   drawBoard();
   drawHands();
-
   selectedCard=null;
-
 }
 
-document.getElementById("cardSearch").addEventListener("input", () => {
+document.getElementById("cardSearch").addEventListener("input", ()=>{
   drawHands();
   drawBoard();
 });
-

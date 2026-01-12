@@ -82,6 +82,10 @@ function isMineOrWild(cell,color){
   return cell.chip===color || cell.chip==="wild";
 }
 
+function boardIsFull(board){
+  return board.every(c => c.chip !== null);
+}
+
 function checkSequence(g,color){
   const dirs = [[0,1],[1,0],[1,1],[1,-1]];
 
@@ -137,6 +141,7 @@ io.on("connection", socket => {
       if(cell.chip && cell.chip!==color && cell.chip!=="wild") cell.chip=null;
       else return;
     }
+
     else if(card==="JEE"){
       if(!cell.chip) cell.chip=color;
       else return;
@@ -153,6 +158,16 @@ io.on("connection", socket => {
     if(checkSequence(g,color)){
       io.to(room).emit("sequence", color);
     }
+    if(boardIsFull(g.board)){
+    let winner = "draw";
+    if(g.scores.red > g.scores.blue) winner = "red";
+    else if(g.scores.blue > g.scores.red) winner = "blue";
+
+    io.to(room).emit("gameover", winner);
+    delete rooms[room];
+    return;
+  }
+
 
     io.to(room).emit("sync", g);
   });

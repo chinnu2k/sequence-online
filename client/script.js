@@ -11,7 +11,7 @@ const turnText = document.getElementById("turn");
 const redHandEl = document.getElementById("redHand");
 const blueHandEl = document.getElementById("blueHand");
 
-socket.on("role", r => {
+socket.on("role", r=>{
   myColor = r;
   turnText.innerText = "You are " + r.toUpperCase();
 });
@@ -20,80 +20,70 @@ socket.on("sequence", color=>{
   alert(color.toUpperCase()+" formed a SEQUENCE!");
 });
 
-
-socket.on("sync", state => {
-  game = state;                     // FIRST assign game
-
+socket.on("sync", state=>{
+  game = state;
   document.getElementById("redScore").innerText = game.scores.red;
   document.getElementById("blueScore").innerText = game.scores.blue;
-
   draw();
 });
 
-
 function draw(){
-  if(!game) return;   // ⬅️ THIS IS THE FIX
+  if(!game) return;
   drawBoard();
   drawHands();
 }
 
-
 function drawBoard(){
-  if(!game || !game.board) return;
-
   boardEl.innerHTML="";
   game.board.forEach((c,i)=>{
     const d=document.createElement("div");
     d.className="cell";
     if(c.chip) d.classList.add(c.chip);
+
     if(c.card){
-    const suit = c.card.slice(-1);
-    const rank = c.card.slice(0,-1);
+      const suit=c.card.slice(-1);
+      const rank=c.card.slice(0,-1);
 
-    let cls = "spadeCard";
-    if(suit==="♣") cls="clubCard";
-    if(suit==="♥") cls="heartCard";
-    if(suit==="♦") cls="diamondCard";
+      let cls="spadeCard";
+      if(suit==="♣") cls="clubCard";
+      if(suit==="♥") cls="heartCard";
+      if(suit==="♦") cls="diamondCard";
 
-    d.innerHTML = `<span class="${cls}">${rank}${suit}</span>`;
-  }
+      d.innerHTML=`<span class="rank">${rank}</span><span class="${cls}">${suit}</span>`;
+    }
 
-    d.onclick = ()=>playMove(i);
+    d.onclick=()=>playMove(i);
     boardEl.appendChild(d);
   });
 }
 
-
-function drawHands(){
-  if(!game || !game.hands) return;
-
-  redHandEl.innerHTML="🔴 "+game.hands.red.map(c=>
-    `<span class="card ${myColor==='red' && game.current==='red'?'':'disabled'}"
-      onclick="${myColor==='red' && game.current==='red'?`selectCard('${c}')`:''}">${c}</span>`
-  ).join("");
-
-  blueHandEl.innerHTML="🔵 "+game.hands.blue.map(c=>
-    `<span class="card ${myColor==='blue' && game.current==='blue'?'':'disabled'}"
-      onclick="${myColor==='blue' && game.current==='blue'?`selectCard('${c}')`:''}">${c}</span>`
-  ).join("");
-
-  document.getElementById("redScore").innerText = game.scores.red;
-  document.getElementById("blueScore").innerText = game.scores.blue;
+function renderCard(c,active){
+  return `<span class="card ${active?'':'disabled'}"
+    onclick="${active?`selectCard('${c}')`:''}">${c}</span>`;
 }
 
+function drawHands(){
+  const query=document.getElementById("cardSearch").value||"";
 
-function selectCard(c){ selectedCard = c; }
+  redHandEl.innerHTML=myColor==="red"
+    ? "🔴 "+game.hands.red.filter(c=>c.includes(query))
+        .map(c=>renderCard(c,game.current==="red")).join("")
+    : "🔴 <span class='hiddenHand'>Opponent Hand</span>";
+
+  blueHandEl.innerHTML=myColor==="blue"
+    ? "🔵 "+game.hands.blue.filter(c=>c.includes(query))
+        .map(c=>renderCard(c,game.current==="blue")).join("")
+    : "🔵 <span class='hiddenHand'>Opponent Hand</span>";
+}
+
+function selectCard(c){ selectedCard=c; }
 
 function playMove(i){
   if(!selectedCard) return alert("Select a card");
-  if(game.current !== myColor) return alert("Wait for your turn!");
+  if(game.current!==myColor) return alert("Wait for your turn!");
 
-  socket.emit("move",{
-    room,
-    index: i,
-    card: selectedCard,
-    color: myColor
-  });
-
+  socket.emit("move",{ room, index:i, card:selectedCard, color:myColor });
   selectedCard=null;
 }
+
+document.getElementById("cardSearch").addEventListener("input", drawHands);

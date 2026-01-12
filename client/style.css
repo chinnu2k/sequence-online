@@ -1,57 +1,88 @@
 body {
-    background: #0b132b;
-    color: white;
-    text-align: center;
-    font-family: sans-serif;
+  background: #0b132b;
+  color: white;
+  text-align: center;
+  font-family: system-ui, sans-serif;
 }
 
 #board {
-    display: grid;
-    grid-template-columns: repeat(10, 60px);
-    gap: 4px;
-    justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(10, 60px);
+  gap: 4px;
+  justify-content: center;
 }
 
 .cell {
-  width:60px;
-  height:60px;
-  background:#1c2541;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols", "Arial Unicode MS", system-ui, sans-serif;
+  width: 60px;
+  height: 60px;
+  background: #1c2541;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: "Segoe UI Symbol","Apple Symbols","Noto Sans Symbols","Arial Unicode MS",system-ui,sans-serif;
 }
 
-
-.red {
-    background: #ff4d4d;
+/* Chip overlay */
+.red::after,
+.blue::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  opacity: 0.75;
 }
 
-.blue {
-    background: #3fa9f5;
+.red::after { background: #ff4d4d; }
+.blue::after { background: #3fa9f5; }
+
+/* Card visuals */
+.rank {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  margin-right: 2px;
 }
 
+.spadeCard {
+  color: #e0e0e0;
+  font-weight: 700;
+  text-shadow: 0 0 2px #000;
+}
+
+.clubCard {
+  color: #3ddc84;
+  font-weight: 700;
+}
+
+.heartCard {
+  color: #ff4d4d;
+  font-weight: 700;
+}
+
+.diamondCard {
+  color: #4fc3f7;
+  font-weight: 700;
+}
+
+/* Hand cards */
 .card {
-    padding: 6px 10px;
-    margin: 4px;
-    background: #222;
-    border-radius: 6px;
-    cursor: pointer;
+  padding: 6px 10px;
+  margin: 4px;
+  background: #222;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .disabled {
-    opacity: .3;
-    pointer-events: none;
-}
-.spadeCard { 
-  color:#e0e0e0; 
-  font-weight:700;
-  text-shadow:0 0 2px #000;
+  opacity: 0.3;
+  pointer-events: none;
 }
 
-.clubCard { color:#3ddc84; font-weight:700; }     /* green */
-.heartCard { color:#ff4d4d; font-weight:700; }    /* red */
-.diamondCard { color:#4fc3f7; font-weight:700; }  /* glass blue */
+.hiddenHand {
+  opacity: 0.4;
+  font-style: italic;
+}

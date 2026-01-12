@@ -14,15 +14,18 @@ const suits = ["♠","♣","♥","♦"];
 const ranks = ["A","2","3","4","5","6","7","8","9","10","Q","K"];
 
 function buildBoardCards(){
-  let cards=[];
+  const board = [];
+  const normalRanks = ["A","2","3","4","5","6","7","8","9","10","Q","K"];
+
   for(let d=0; d<2; d++){
     suits.forEach(s=>{
-      ranks.forEach(r=>{
-        cards.push(r+s);
+      normalRanks.forEach(r=>{
+        board.push(r+s);
       });
     });
   }
-  return cards.sort(()=>Math.random()-0.5);   // 100 cards
+
+  return board;   // always exactly 100
 }
 
 function buildDeck(){
@@ -40,12 +43,22 @@ function buildDeck(){
 
 function newGame(){
   const boardCards = buildBoardCards();
-  const board = boardCards.map(c => ({ card:c, chip:null }));
 
-  // ✅ Now board EXISTS, so set FREE corners
+  if(boardCards.length !== 100){
+    throw new Error("Board card count invalid: "+boardCards.length);
+  }
+
+  // Shuffle
+  for(let i=boardCards.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [boardCards[i], boardCards[j]] = [boardCards[j], boardCards[i]];
+  }
+
+  const board = boardCards.map(c=>({ card:c, chip:null }));
+
+  // FREE corners
   [0,9,90,99].forEach(i=>{
-    board[i].card = "FREE";
-    board[i].chip = "wild";
+    board[i] = { card:"FREE", chip:"wild" };
   });
 
   const deck = buildDeck();

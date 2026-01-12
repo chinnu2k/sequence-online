@@ -125,7 +125,14 @@ function playMove(i){
   if(game.current!==myColor) return alert("Wait for your turn!");
 
   socket.emit("move",{ room, index:i, card:selectedCard, color:myColor });
+
+  // 🔥 clear search after using it
+  document.getElementById("cardSearch").value = "";
+  drawBoard();
+  drawHands();
+
   selectedCard=null;
+
 }
 
 document.getElementById("cardSearch").addEventListener("input", () => {

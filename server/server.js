@@ -22,7 +22,7 @@ function buildBoardCards(){
       });
     });
   }
-  return cards.sort(()=>Math.random()-0.5);   // exactly 100 cards
+  return cards.sort(()=>Math.random()-0.5);   // 100 cards
 }
 
 function buildDeck(){
@@ -34,49 +34,54 @@ function buildDeck(){
       });
     });
   }
-
   for(let i=0;i<4;i++){ deck.push("JE"); deck.push("JEE"); }
   return deck.sort(()=>Math.random()-0.5);
 }
 
 function newGame(){
-  const boardCards = buildBoardCards();     // 100 fixed cards
-  const deck = buildDeck();
-
+  const boardCards = buildBoardCards();
   const board = boardCards.map(c=>({ card:c, chip:null }));
+
+  // FREE corners
+  [0,9,90,99].forEach(i=>{
+    board[i].card = "FREE";
+    board[i].chip = "wild";
+  });
+
+  const deck = buildDeck();
 
   return {
     board,
     deck,
-    hands:{ red:deck.splice(0,5), blue:deck.splice(0,5) },
+    hands:{ red:deck.splice(0,7), blue:deck.splice(0,7) },
     current:"red",
     scores:{red:0,blue:0},
     sequenceCells:[]
   };
 }
 
+function isMineOrWild(cell,color){
+  return cell.chip===color || cell.chip==="wild";
+}
+
 function checkSequence(g,color){
   const dirs = [[0,1],[1,0],[1,1],[1,-1]];
 
-  for(let i=0;i<g.board.length;i++){
-    if(!g.board[i] || g.board[i].chip!==color || g.sequenceCells.includes(i)) continue;
+  for(let i=0;i<100;i++){
+    const base = g.board[i];
+    if(!base || !isMineOrWild(base,color) || g.sequenceCells.includes(i)) continue;
 
-    const r = Math.floor(i/10);
-    const c = i%10;
+    const r=Math.floor(i/10), c=i%10;
 
     for(const [dx,dy] of dirs){
       let cells=[i];
 
       for(let k=1;k<5;k++){
-        const nr = r + dx*k;
-        const nc = c + dy*k;
-
-        if(nr<0 || nr>9 || nc<0 || nc>9) break;
-
-        const idx = nr*10 + nc;
-        if(!g.board[idx] || g.board[idx].chip!==color || g.sequenceCells.includes(idx))
-          break;
-
+        const nr=r+dx*k, nc=c+dy*k;
+        if(nr<0||nr>9||nc<0||nc>9) break;
+        const idx=nr*10+nc;
+        const cell=g.board[idx];
+        if(!cell || !isMineOrWild(cell,color) || g.sequenceCells.includes(idx)) break;
         cells.push(idx);
       }
 
@@ -90,26 +95,19 @@ function checkSequence(g,color){
   return false;
 }
 
-
 io.on("connection", socket => {
 
- socket.on("join", room => {
-  socket.join(room);
+  socket.on("join", room=>{
+    socket.join(room);
 
-  if(!rooms[room]){
-    rooms[room] = { players: [], game: newGame() };
-  }
+    if(!rooms[room]) rooms[room]={ players:[], game:newGame() };
+    if(!rooms[room].players.includes(socket.id) && rooms[room].players.length<2)
+      rooms[room].players.push(socket.id);
 
-  if(!rooms[room].players.includes(socket.id) && rooms[room].players.length < 2){
-    rooms[room].players.push(socket.id);
-  }
-
-  const role = rooms[room].players[0] === socket.id ? "red" : "blue";
-
-  socket.emit("role", role);
-  socket.emit("sync", rooms[room].game);
-});
-
+    const role = rooms[room].players[0]===socket.id?"red":"blue";
+    socket.emit("role", role);
+    socket.emit("sync", rooms[room].game);
+  });
 
   socket.on("move", ({room,index,card,color})=>{
     const g = rooms[room].game;
@@ -118,7 +116,7 @@ io.on("connection", socket => {
     const cell=g.board[index];
 
     if(card==="JE"){
-      if(cell.chip && cell.chip!==color) cell.chip=null;
+      if(cell.chip && cell.chip!==color && cell.chip!=="wild") cell.chip=null;
       else return;
     }
     else if(card==="JEE"){

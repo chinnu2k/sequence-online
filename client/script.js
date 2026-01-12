@@ -43,27 +43,36 @@ function drawBoard(){
   boardEl.innerHTML="";
 
   game.board.forEach((c,i)=>{
-    const d=document.createElement("div");
-    d.className="cell";
+    const d = document.createElement("div");
+    d.className = "cell";
     if(c.chip) d.classList.add(c.chip);
 
-    const suit=c.card.slice(-1);
-    const rank=c.card.slice(0,-1);
-    let cls="spadeCard";
+    // 🔥 FREE corner handling
+    if(c.card === "FREE"){
+      d.innerHTML = "<span class='freeCell'>FREE</span>";
+      boardEl.appendChild(d);
+      return;
+    }
+
+    const suit = c.card.slice(-1);
+    const rank = c.card.slice(0,-1);
+
+    let cls = "spadeCard";
     if(suit==="♣") cls="clubCard";
     if(suit==="♥") cls="heartCard";
     if(suit==="♦") cls="diamondCard";
 
-    d.innerHTML=`<span class="rank">${rank}</span><span class="${cls}">${suit}</span>`;
+    d.innerHTML = `<span class="rank">${rank}</span><span class="${cls}">${suit}</span>`;
 
     if(q && c.card.toLowerCase().includes(q.toLowerCase())){
       d.classList.add("highlight");
     }
 
-    d.onclick=()=>playMove(i);
+    d.onclick = ()=>playMove(i);
     boardEl.appendChild(d);
   });
 }
+
 
 
 function renderCard(c, active){
@@ -74,9 +83,12 @@ function renderCard(c, active){
   if(active){
     span.addEventListener("click", () => {
       selectedCard = c;
+      document.getElementById("cardSearch").value = c;   // 🔥 auto-fill search
       document.querySelectorAll(".card").forEach(e => e.classList.remove("selected"));
       span.classList.add("selected");
-    });
+      drawBoard();   // update board highlight
+});
+
   }
   return span;
 }

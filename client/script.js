@@ -134,3 +134,7 @@ document.getElementById("cardSearch").addEventListener("input", ()=>{
   drawHands();
   drawBoard();
 });
+
+function discardCard(card){
+  socket.emit("discard",card);
+}

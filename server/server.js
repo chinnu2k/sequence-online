@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const fs = require("fs");
 
 const app = express();
 const server = http.createServer(app);
@@ -9,106 +10,71 @@ const io = new Server(server,{cors:{origin:"*"}});
 app.get("/",(_,res)=>res.send("Sequence Server Live"));
 
 let rooms = {};
+if(fs.existsSync("./rooms.json")){
+  rooms = JSON.parse(fs.readFileSync("./rooms.json"));
+}
+
+function saveRooms(){
+  fs.writeFileSync("./rooms.json", JSON.stringify(rooms));
+}
 
 const suits = ["♠","♣","♥","♦"];
 const ranks = ["A","2","3","4","5","6","7","8","9","10","Q","K"];
 
 function buildBoardCards(){
-  const board = [];
-  const normalRanks = ["A","2","3","4","5","6","7","8","9","10","Q","K"];
-
-  for(let d=0; d<2; d++){
-    suits.forEach(s=>{
-      normalRanks.forEach(r=>{
-        board.push(r+s);
-      });
-    });
-  }
-
-  return board;   // always exactly 100
+  const board=[];
+  for(let d=0; d<2; d++)
+    suits.forEach(s=>ranks.forEach(r=>board.push(r+s)));
+  return board;
 }
 
 function buildDeck(){
   let deck=[];
-  for(let d=0; d<2; d++){
-    suits.forEach(s=>{
-      ranks.forEach(r=>{
-        deck.push(r+s);
-      });
-    });
-  }
+  for(let d=0; d<2; d++)
+    suits.forEach(s=>ranks.forEach(r=>deck.push(r+s)));
   for(let i=0;i<4;i++){ deck.push("JE"); deck.push("JEE"); }
   return deck.sort(()=>Math.random()-0.5);
 }
 
 function newGame(){
-  const boardCards = buildBoardCards();   // length = 96
-
-  if(boardCards.length !== 96){
-    throw new Error("Board card count invalid: "+boardCards.length);
-  }
-
-  // Shuffle
-  for(let i=boardCards.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [boardCards[i], boardCards[j]] = [boardCards[j], boardCards[i]];
-  }
-
-  // Insert FREE corners to make 100 cells
-  const board = [];
-
+  const boardCards=buildBoardCards().sort(()=>Math.random()-0.5);
+  const board=[];
   for(let i=0;i<100;i++){
-    if([0,9,90,99].includes(i)){
-      board.push({ card:"FREE", chip:"wild" });
-    } else {
-      board.push({ card: boardCards.pop(), chip:null });
-    }
+    if([0,9,90,99].includes(i)) board.push({card:"FREE",chip:"wild"});
+    else board.push({card:boardCards.pop(),chip:null});
   }
-
-  const deck = buildDeck();
-
+  const deck=buildDeck();
   return {
     board,
     deck,
-    hands:{ red:deck.splice(0,7), blue:deck.splice(0,7) },
+    hands:{red:deck.splice(0,7),blue:deck.splice(0,7)},
     current:"red",
     scores:{red:0,blue:0},
-    sequenceCells:[]
+    sequenceGroups:[]
   };
 }
 
-
-function isMineOrWild(cell,color){
-  return cell.chip===color || cell.chip==="wild";
-}
-
-function boardIsFull(board){
-  return board.every(c => c.chip !== null);
+function isMineOrWild(c,color){
+  return c.chip===color||c.chip==="wild";
 }
 
 function checkSequence(g,color){
-  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
-
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
   for(let i=0;i<100;i++){
-    const base = g.board[i];
-    if(!base || !isMineOrWild(base,color) || g.sequenceCells.includes(i)) continue;
-
-    const r=Math.floor(i/10), c=i%10;
-
-    for(const [dx,dy] of dirs){
+    if(!isMineOrWild(g.board[i],color)) continue;
+    const r=Math.floor(i/10),c=i%10;
+    for(const[d1,d2] of dirs){
       let cells=[i];
-
       for(let k=1;k<5;k++){
-        const nr=r+dx*k, nc=c+dy*k;
+        const nr=r+d1*k,nc=c+d2*k;
         if(nr<0||nr>9||nc<0||nc>9) break;
         const idx=nr*10+nc;
-        const cell=g.board[idx];
-        if(!cell || !isMineOrWild(cell,color) || g.sequenceCells.includes(idx)) break;
+        if(!isMineOrWild(g.board[idx],color)) break;
+        if(g.sequenceGroups.flat().includes(idx)) break;
         cells.push(idx);
       }
-
       if(cells.length===5){
-        g.sequenceCells.push(...cells);
+        g.sequenceGroups.push(cells);
         g.scores[color]++;
         return true;
       }
@@ -117,60 +83,58 @@ function checkSequence(g,color){
   return false;
 }
 
-io.on("connection", socket => {
+io.on("connection",socket=>{
 
-  socket.on("join", room=>{
-    socket.join(room);
+socket.on("join",room=>{
+  socket.join(room);
+  if(!rooms[room]) rooms[room]={players:[],game:newGame()};
+  if(!rooms[room].players.includes(socket.id)&&rooms[room].players.length<2)
+    rooms[room].players.push(socket.id);
+  socket.emit("role", rooms[room].players[0]===socket.id?"red":"blue");
+  socket.emit("sync", rooms[room].game);
+});
 
-    if(!rooms[room]) rooms[room]={ players:[], game:newGame() };
-    if(!rooms[room].players.includes(socket.id) && rooms[room].players.length<2)
-      rooms[room].players.push(socket.id);
+socket.on("discard",({room,card,color})=>{
+  const g=rooms[room].game;
+  if(g.current!==color) return;
+  if(g.board.some(c=>c.card===card&&c.chip===color)) return;
+  g.hands[color]=g.hands[color].filter(c=>c!==card);
+  g.hands[color].push(g.deck.pop());
+  g.current=color==="red"?"blue":"red";
+  saveRooms();
+  io.to(room).emit("sync",g);
+});
 
-    const role = rooms[room].players[0]===socket.id?"red":"blue";
-    socket.emit("role", role);
-    socket.emit("sync", rooms[room].game);
-  });
+socket.on("move",({room,index,card,color})=>{
+  const g=rooms[room].game;
+  if(g.current!==color) return;
+  const cell=g.board[index];
 
-  socket.on("move", ({room,index,card,color})=>{
-    const g = rooms[room].game;
-    if(g.current!==color) return;
+  if(card==="JE"){
+    if(g.sequenceGroups.flat().includes(index)) return;
+    if(cell.chip&&cell.chip!==color&&cell.chip!=="wild") cell.chip=null;
+    else return;
+  }
+  else if(card==="JEE"){
+    if(!cell.chip) cell.chip=color;
+    else return;
+  }
+  else{
+    if(cell.card!==card||cell.chip) return;
+    cell.chip=color;
+  }
 
-    const cell=g.board[index];
-
-    if(card==="JE"){
-      if(cell.chip && cell.chip!==color && cell.chip!=="wild") cell.chip=null;
-      else return;
-    }
-
-    else if(card==="JEE"){
-      if(!cell.chip) cell.chip=color;
-      else return;
-    }
-    else{
-      if(cell.card!==card || cell.chip) return;
-      cell.chip=color;
-    }
-
-    g.hands[color].splice(g.hands[color].indexOf(card),1);
-    g.hands[color].push(g.deck.pop());
-    g.current = g.current==="red"?"blue":"red";
-
-    if(checkSequence(g,color)){
-      io.to(room).emit("sequence", color);
-    }
-    if(boardIsFull(g.board)){
-    let winner = "draw";
-    if(g.scores.red > g.scores.blue) winner = "red";
-    else if(g.scores.blue > g.scores.red) winner = "blue";
-
-    io.to(room).emit("gameover", winner);
-    delete rooms[room];
+  g.hands[color].splice(g.hands[color].indexOf(card),1);
+  g.hands[color].push(g.deck.pop());
+  if(checkSequence(g,color)&&g.scores[color]>=2){
+    io.to(room).emit("gameover",color);
     return;
   }
 
-
-    io.to(room).emit("sync", g);
-  });
+  g.current=color==="red"?"blue":"red";
+  saveRooms();
+  io.to(room).emit("sync",g);
+});
 });
 
 server.listen(process.env.PORT||3000);

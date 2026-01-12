@@ -40,9 +40,9 @@ function buildDeck(){
 
 function newGame(){
   const boardCards = buildBoardCards();
-  const board = boardCards.map(c=>({ card:c, chip:null }));
+  const board = boardCards.map(c => ({ card:c, chip:null }));
 
-  // FREE corners
+  // ✅ Now board EXISTS, so set FREE corners
   [0,9,90,99].forEach(i=>{
     board[i].card = "FREE";
     board[i].chip = "wild";

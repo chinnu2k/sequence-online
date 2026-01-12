@@ -93,15 +93,23 @@ function checkSequence(g,color){
 
 io.on("connection", socket => {
 
-  socket.on("join", room=>{
-    socket.join(room);
-    if(!rooms[room]) rooms[room]={ players:[], game:newGame() };
-    if(rooms[room].players.length<2) rooms[room].players.push(socket.id);
+ socket.on("join", room => {
+  socket.join(room);
 
-    const role = rooms[room].players[0]===socket.id?"red":"blue";
-    socket.emit("role", role);
-    socket.emit("sync", rooms[room].game);
-  });
+  if(!rooms[room]){
+    rooms[room] = { players: [], game: newGame() };
+  }
+
+  if(!rooms[room].players.includes(socket.id) && rooms[room].players.length < 2){
+    rooms[room].players.push(socket.id);
+  }
+
+  const role = rooms[room].players[0] === socket.id ? "red" : "blue";
+
+  socket.emit("role", role);
+  socket.emit("sync", rooms[room].game);
+});
+
 
   socket.on("move", ({room,index,card,color})=>{
     const g = rooms[room].game;

@@ -1,6 +1,6 @@
-const socket = io("https://sequence-backend-cnv1.onrender.com");
+const socket = io("wss://sequence-backend-cnv1.onrender.com");
+
 const room = prompt("Room Code");
-socket.emit("join", room);
 
 let myColor = null;
 let game = null;
@@ -11,16 +11,21 @@ const turnText = document.getElementById("turn");
 const redHandEl = document.getElementById("redHand");
 const blueHandEl = document.getElementById("blueHand");
 
-socket.on("role", r=>{
+socket.on("connect", () => {
+  console.log("Connected:", socket.id);
+  socket.emit("join", room);
+});
+
+socket.on("role", r => {
   myColor = r;
   turnText.innerText = "You are " + r.toUpperCase();
 });
 
-socket.on("sequence", color=>{
-  alert(color.toUpperCase()+" formed a SEQUENCE!");
+socket.on("sequence", color => {
+  alert(color.toUpperCase() + " formed a SEQUENCE!");
 });
 
-socket.on("sync", state=>{
+socket.on("sync", state => {
   game = state;
   document.getElementById("redScore").innerText = game.scores.red;
   document.getElementById("blueScore").innerText = game.scores.blue;
@@ -40,18 +45,14 @@ function drawBoard(){
     d.className="cell";
     if(c.chip) d.classList.add(c.chip);
 
-    if(c.card){
-      const suit=c.card.slice(-1);
-      const rank=c.card.slice(0,-1);
+    const suit=c.card.slice(-1);
+    const rank=c.card.slice(0,-1);
+    let cls="spadeCard";
+    if(suit==="♣") cls="clubCard";
+    if(suit==="♥") cls="heartCard";
+    if(suit==="♦") cls="diamondCard";
 
-      let cls="spadeCard";
-      if(suit==="♣") cls="clubCard";
-      if(suit==="♥") cls="heartCard";
-      if(suit==="♦") cls="diamondCard";
-
-      d.innerHTML=`<span class="rank">${rank}</span><span class="${cls}">${suit}</span>`;
-    }
-
+    d.innerHTML=`<span class="rank">${rank}</span><span class="${cls}">${suit}</span>`;
     d.onclick=()=>playMove(i);
     boardEl.appendChild(d);
   });
@@ -63,16 +64,14 @@ function renderCard(c,active){
 }
 
 function drawHands(){
-  const query=document.getElementById("cardSearch").value||"";
+  const q=document.getElementById("cardSearch").value||"";
 
   redHandEl.innerHTML=myColor==="red"
-    ? "🔴 "+game.hands.red.filter(c=>c.includes(query))
-        .map(c=>renderCard(c,game.current==="red")).join("")
+    ? "🔴 "+game.hands.red.filter(c=>c.includes(q)).map(c=>renderCard(c,game.current==="red")).join("")
     : "🔴 <span class='hiddenHand'>Opponent Hand</span>";
 
   blueHandEl.innerHTML=myColor==="blue"
-    ? "🔵 "+game.hands.blue.filter(c=>c.includes(query))
-        .map(c=>renderCard(c,game.current==="blue")).join("")
+    ? "🔵 "+game.hands.blue.filter(c=>c.includes(q)).map(c=>renderCard(c,game.current==="blue")).join("")
     : "🔵 <span class='hiddenHand'>Opponent Hand</span>";
 }
 

@@ -42,9 +42,9 @@ function buildDeck(){
 }
 
 function newGame(){
-  const boardCards = buildBoardCards();
+  const boardCards = buildBoardCards();   // length = 96
 
-  if(boardCards.length !== 100){
+  if(boardCards.length !== 96){
     throw new Error("Board card count invalid: "+boardCards.length);
   }
 
@@ -54,12 +54,16 @@ function newGame(){
     [boardCards[i], boardCards[j]] = [boardCards[j], boardCards[i]];
   }
 
-  const board = boardCards.map(c=>({ card:c, chip:null }));
+  // Insert FREE corners to make 100 cells
+  const board = [];
 
-  // FREE corners
-  [0,9,90,99].forEach(i=>{
-    board[i] = { card:"FREE", chip:"wild" };
-  });
+  for(let i=0;i<100;i++){
+    if([0,9,90,99].includes(i)){
+      board.push({ card:"FREE", chip:"wild" });
+    } else {
+      board.push({ card: boardCards.pop(), chip:null });
+    }
+  }
 
   const deck = buildDeck();
 
@@ -72,6 +76,7 @@ function newGame(){
     sequenceCells:[]
   };
 }
+
 
 function isMineOrWild(cell,color){
   return cell.chip===color || cell.chip==="wild";
